@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.lt-peacock</groupId>
 	<artifactId>lp-multisorter</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>Lt. Peacock's Multisorter</name>
 	<description>Sorter for various file types.</description>
 	<properties>
