@@ -1,8 +1,8 @@
 package com.ltpeacock.sorter.xml;
 
-import static java.lang.String.format;
-import static com.ltpeacock.sorter.xml.Util.logException;
+import static com.ltpeacock.sorter.xml.Util.logAndThrow;
 import static com.ltpeacock.sorter.xml.Util.removeEmptyLines;
+import static java.lang.String.format;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -34,9 +34,21 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class SortXmlEngine {
-    private static final Logger LOG = Logger.getLogger(SortXmlEngine.class.getName());
+/**
+ * Engine for sorting XML.
+ * @author LieutenantPeacock
+ *
+ */
+public class SortXMLEngine {
+    private static final Logger LOG = Logger.getLogger(SortXMLEngine.class.getName());
 
+    /**
+     * Sorts the XML from an {@link InputStream} and prints the result to the given {@link OutputStream}.
+     * <br>
+     * Both streams will be closed at the end.
+     * @param in The InputStream to read the XML document from
+     * @param os The OutputStream to write the sorted XML document to
+     */
     public void sort(final InputStream in, final OutputStream os) {
         try (BufferedInputStream bis = new BufferedInputStream(in);
                 BufferedOutputStream bos = new BufferedOutputStream(os);
@@ -46,16 +58,16 @@ public class SortXmlEngine {
             sortElement(rootDocElement);
             final String prettyXml = XmlPrettyPrint.prettyXml(doc);
             final String prettyXml2 = XmlPrettyPrint.prettyFormat(prettyXml);
-            final String prettyXml4 = removeEmptyLines(prettyXml2);
-            final String prettyXml5 = prettyXml4.replaceAll("\">", "\" >").replaceAll("\"/>", "\" />");
-            final String prettyXml6 = removeExtraWsdlpartClose(prettyXml5);
-            pw.print(prettyXml6);
+            final String prettyXml3 = removeEmptyLines(prettyXml2);
+            final String prettyXml4 = prettyXml3.replaceAll("\">", "\" >").replaceAll("\"/>", "\" />");
+            final String prettyXml5 = removeExtraWsdlpartClose(prettyXml4);
+            pw.print(prettyXml5);
         } catch (IOException e) {
-            logException(e);
+            logAndThrow(e);
         }
     }
 
-    static String removeExtraWsdlpartClose(final String inputStr) {
+    private static String removeExtraWsdlpartClose(final String inputStr) {
         final String s1 = removeExtraClose(inputStr, "wsdl:part");
         final String s2 = removeExtraClose(s1, "wsdl:input");
         final String s3 = removeExtraClose(s2, "wsdl:output");
@@ -65,26 +77,20 @@ public class SortXmlEngine {
         return s6;
     }
     
-    static String removeExtraClose(final String inputStr, final String tag) {
+    private static String removeExtraClose(final String inputStr, final String tag) {
         final Pattern pattern = Pattern.compile("(<" + tag + " .+ )>\\r?\\n?[ \t]*</" + tag + ">", Pattern.MULTILINE);
         final Matcher m = pattern.matcher(inputStr);
-        final String prettyXml3 = m.replaceAll("$1/>");
-
-        return prettyXml3;
+        final String prettyXml = m.replaceAll("$1/>");
+        return prettyXml;
     }
     
-    /**
-     * @param rootDocElement
-     */
-    void sortElement(final Element rootDocElement) {
-        final NodeList nodeList = rootDocElement.getChildNodes();
+    private void sortElement(final Element element) {
+        final NodeList nodeList = element.getChildNodes();
         final int length = nodeList.getLength();
         final List<Element> elemList0 = new ArrayList<>(length);
         for (int i = 0; i < length; i++) {
             Node currentNode = nodeList.item(i);
-
             if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
-
                 final String nodeName = currentNode.getNodeName();
                 LOG.fine(format("localName [%s]", nodeName));
                 elemList0.add((Element) currentNode);
@@ -100,13 +106,13 @@ public class SortXmlEngine {
         for (Node elem : elemList0) {
             count++;
             LOG.fine(format("removing Count [%s], name[%s]", count, elem.getNodeName()));
-            rootDocElement.removeChild(elem);
+            element.removeChild(elem);
         }
-        int count2 = 0;
+        count = 0;
         for (Node elem : elemList0) {
-            count2++;
-            LOG.fine(format("Count [%s], name[%s]", count2, elem.getNodeName()));
-            rootDocElement.appendChild(elem);
+            count++;
+            LOG.fine(format("Count [%s], name[%s]", count, elem.getNodeName()));
+            element.appendChild(elem);
         }
     }
 
@@ -119,25 +125,20 @@ public class SortXmlEngine {
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
         LOG.info("===== printing XML =====");
         transformer.transform(new DOMSource(doc),
              new StreamResult(new OutputStreamWriter(out, "UTF-8")));
     }
 
-    protected Document readXml(final InputStream is) {
+    private Document readXml(final InputStream is) {
         DocumentBuilderFactory docBuilderFac = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = null;
         Document doc = null;
         try {
             docBuilder = docBuilderFac.newDocumentBuilder();
             doc = docBuilder.parse(is);
-        } catch (ParserConfigurationException e) {
-            logException(e);
-        } catch (SAXException e) {
-            logException(e);
-        } catch (IOException e) {
-            logException(e);
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            logAndThrow(e);
         }
         return doc;
     }

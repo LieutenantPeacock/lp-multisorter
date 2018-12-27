@@ -5,6 +5,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Utility class meant only for internal use.
+ * @author LieutenantPeacock
+ *
+ */
 public class Util {
 	private static final Logger LOG = Logger.getLogger(Util.class.getName());
 	
@@ -31,21 +36,17 @@ public class Util {
         return result;
     }
 
-    /**
-     * @param inputStr
-     * @return
-     */
     public static String removeEmptyLines(final String inputStr) {
         final Pattern pattern = Pattern.compile("(^[ \t]*$\\r\\n)+", Pattern.MULTILINE);
         final Matcher m = pattern.matcher(inputStr);
         m.replaceAll("\r\n");
-        final String prettyXml3 = m.replaceAll("\r\n");
-        final String prettyXml4 = prettyXml3.replaceAll("(\\r\\n)+", "\r\n");
-        return prettyXml4;
+        final String prettyXml = m.replaceAll("\r\n");
+        final String prettyXml2 = prettyXml.replaceAll("(\\r\\n)+", "\r\n");
+        return prettyXml2;
     }
     
-    public static void logException(final Exception e) {
-        LOG.log(Level.SEVERE, "Error", e);
+    public static void logAndThrow(final Exception e) {
+        LOG.log(Level.SEVERE, "Exception", e);
         throw new RuntimeException(e);
     }
 }
