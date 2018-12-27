@@ -13,6 +13,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -30,6 +31,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -41,7 +43,31 @@ import org.xml.sax.SAXException;
  */
 public class SortXMLEngine {
     private static final Logger LOG = Logger.getLogger(SortXMLEngine.class.getName());
-
+    private final Comparator<Element> elementComparator;
+    private final Comparator<Node> attributeComparator;
+    
+    /**
+     * Constructs a {@code SortXMLEngine} using {@link ElementComparator} for ordering elements
+     * and {@link AttributeComparator} for ordering element attributes.
+     */
+    public SortXMLEngine() {
+    	this(new ElementComparator(), new AttributeComparator());
+    }
+    
+    /**
+     * Constructs a {@code SortXMLEngine} using the given {@link Comparator}s 
+     * for sorting elements and their attributes.
+     * <br>
+     * For maintaining original element order, use {@link ElementComparator#MAINTAIN_ORDER}
+     * and for maintaining original attributes order, use {@link AttributeComparator#MAINTAIN_ORDER}.
+     * @param elementComparator The comparator for ordering elements in the XML file
+     * @param attributeComparator The comparator for ordering the attributes for each element
+     */
+    public SortXMLEngine(final Comparator<Element> elementComparator, final Comparator<Node> attributeComparator) {
+    	this.elementComparator = elementComparator;
+    	this.attributeComparator = attributeComparator;
+    }
+    
     /**
      * Sorts the XML from an {@link InputStream} and prints the result to the given {@link OutputStream}.
      * <br>
@@ -88,20 +114,31 @@ public class SortXMLEngine {
         final NodeList nodeList = element.getChildNodes();
         final int length = nodeList.getLength();
         final List<Element> elemList0 = new ArrayList<>(length);
+        final NamedNodeMap attributesMap = element.getAttributes();
+        final int attributesLen = attributesMap.getLength();
+        final List<Node> attributes = new ArrayList<>(attributesLen);
+        for(int i = attributesLen - 1; i >= 0; i--) {
+        	final Node attribute = attributesMap.item(i);
+        	attributes.add(attribute);
+        	element.removeAttribute(attribute.getNodeName());
+        }
+        attributes.sort(attributeComparator);
+        for(final Node attribute: attributes) {
+        	element.setAttribute(attribute.getNodeName(), attribute.getNodeValue());
+        }
         for (int i = 0; i < length; i++) {
             Node currentNode = nodeList.item(i);
             if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
                 final String nodeName = currentNode.getNodeName();
                 LOG.fine(format("localName [%s]", nodeName));
-                elemList0.add((Element) currentNode);
-                if (currentNode.getChildNodes() != null && currentNode.getChildNodes().getLength() > 0) {
-                    sortElement((Element) currentNode);
-                }
+                Element currentEl = (Element) currentNode;
+                elemList0.add(currentEl);
+                sortElement(currentEl);
             } else {
                 LOG.fine(format("Node type [%s]", currentNode.getNodeType()));
             }
         }
-        Collections.sort(elemList0, new ElementComparator());
+        Collections.sort(elemList0, elementComparator);
         int count = 0;
         for (Node elem : elemList0) {
             count++;
