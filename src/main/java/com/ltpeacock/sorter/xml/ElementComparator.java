@@ -12,6 +12,10 @@ import org.w3c.dom.Element;
  */
 public class ElementComparator implements Comparator<Element> {
     private static final String NAME = "name";
+    /**
+     * Comparator for maintaining original order of XML elements.
+     */
+    public static final Comparator<Element> MAINTAIN_ORDER = (a,b) -> 0;
 
     @Override
     public int compare(final Element arg0, final Element arg1) {
