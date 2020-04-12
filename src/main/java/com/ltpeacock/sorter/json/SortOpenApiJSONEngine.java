@@ -15,9 +15,20 @@ import java.util.List;
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 
+/**
+ * Engine for sorting OpenAPI JSON.
+ * @author LieutenantPeacock
+ *
+ */
 public class SortOpenApiJSONEngine {
 	private int indent = 4;
 
+	/**
+	 * Sorts the OpenAPI JSON from an {@link InputStream} and prints the result to the given {@link OutputStream}.
+	 * @param is The InputStream to read the OpenAPI JSON file from.
+	 * @param os The OutputStream to write the sorted JSON to.
+	 * @throws IOException If there is an error in reading/writing data.
+	 */
 	public void sort(InputStream is, OutputStream os) throws IOException {
 		if (!(is instanceof BufferedInputStream))
 			is = new BufferedInputStream(is);
@@ -31,6 +42,11 @@ public class SortOpenApiJSONEngine {
 		os.flush();
 	}
 
+	/**
+	 * Sorts a {@code JSONObject}.
+	 * @param obj The object to sort.
+	 * @return The sorted object.
+	 */
 	public JSONObject sort(final JSONObject obj) {
 		final JSONObject sortedObj = new JSONObject();
 		final Object api = obj.get("openapi");
@@ -117,6 +133,10 @@ public class SortOpenApiJSONEngine {
 		return nameList;
 	}
 
+	/**
+	 * Set the amount of indent used when outputting the JSON. The default is {@code 4}.
+	 * @param indent The number of spaces used for one indent level.
+	 */
 	public void setIndent(final int indent) {
 		this.indent = indent;
 	}
