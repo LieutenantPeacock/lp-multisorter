@@ -14,13 +14,21 @@
 		<git-commit-id-plugin.version>2.2.3</git-commit-id-plugin.version>
 		<maven-jar-plugin.version>3.0.1</maven-jar-plugin.version>
 	</properties>
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/com.github.openjson/openjson -->
+		<dependency>
+			<groupId>com.github.openjson</groupId>
+			<artifactId>openjson</artifactId>
+			<version>1.0.12</version>
+		</dependency>
+	</dependencies>
 	<build>
 		<finalName>${project.artifactId}-${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.2.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
