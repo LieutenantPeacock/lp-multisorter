@@ -7,6 +7,11 @@ import java.io.OutputStream;
 
 import com.ltpeacock.sorter.json.SortOpenApiJSONEngine;
 
+/**
+ * Main class for sorting OpenAPI JSON using {@link SortOpenApiJSONEngine}.
+ * @author LieutenantPeacock
+ *
+ */
 public class OpenApiJSONSorter {
 	public static void main(final String[] args) throws IOException {
 		switch (args.length) {
