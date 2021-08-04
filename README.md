@@ -12,10 +12,22 @@ To build the project as a single executable JAR:
 mvn clean package -Pcli
 ```
 
+For those who do not want to build it manually, lp-multisorter-cli.jar can be downloaded from most of the [releases](https://github.com/LieutenantPeacock/lp-multisorter/releases) for direct use.
+
 To see instructions on usage:
 
 ```
 java -jar lp-multisorter.jar
+```
+
+This project is also available as a Maven artifact. Maven users can include the library with the following dependency in pom.xml:
+
+```xml
+<dependency>
+  <groupId>com.lt-peacock</groupId>
+  <artifactId>lp-multisorter</artifactId>
+  <version>1.1.0</version>
+</dependency>
 ```
 
 ## XML
