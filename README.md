@@ -20,7 +20,7 @@ To see instructions on usage:
 java -jar lp-multisorter.jar
 ```
 
-This project is also available as a Maven artifact. Maven users can include the library with the following dependency in pom.xml:
+This project is also available as a [Maven artifact](https://search.maven.org/artifact/com.lt-peacock/lp-multisorter/1.1.0/jar). Maven users can include the library with the following dependency in pom.xml:
 
 ```xml
 <dependency>
