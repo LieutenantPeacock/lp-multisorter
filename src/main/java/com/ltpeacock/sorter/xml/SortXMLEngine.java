@@ -114,7 +114,7 @@ public class SortXMLEngine {
         	}
         }
         children.sort(elementComparator);
-        newElem.childElements = children;
+        newElem.setChildElements(children);
         return newElem;
     }
     
@@ -140,7 +140,7 @@ public class SortXMLEngine {
     	    writer.writeStartElement(element.getElement().getNodeName());
     	else
     		writer.writeEmptyElement(element.getElement().getNodeName());
-        element.attributes.sort(attributeComparator);
+        element.sortAttributes(attributeComparator);
         for(final ElementAttribute attribute: element.getAttributes()) {
         	writer.writeAttribute(attribute.getQualifiedName(), attribute.getValue());
         }

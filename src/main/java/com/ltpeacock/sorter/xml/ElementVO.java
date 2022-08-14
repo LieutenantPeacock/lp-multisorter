@@ -2,6 +2,7 @@ package com.ltpeacock.sorter.xml;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.w3c.dom.Element;
@@ -15,8 +16,8 @@ import org.w3c.dom.Element;
  */
 public class ElementVO {
 	private final Element element;
-	final List<ElementAttribute> attributes;
-	List<ElementVO> childElements = new ArrayList<>();
+	private final List<ElementAttribute> attributes;
+	private List<ElementVO> childElements = new ArrayList<>();
 
 	public ElementVO(final Element element, final List<ElementAttribute> attributes) {
 		this.element = element;
@@ -45,5 +46,13 @@ public class ElementVO {
 	 */
 	public List<ElementVO> getChildElements() {
 		return Collections.unmodifiableList(childElements);
+	}
+	
+	void sortAttributes(final Comparator<ElementAttribute> comparator) {
+		this.attributes.sort(comparator);
+	}
+	
+	void setChildElements(final List<ElementVO> childElements) {
+		this.childElements = childElements;
 	}
 }
