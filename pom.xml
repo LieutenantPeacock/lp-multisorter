@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.lt-peacock</groupId>
 	<artifactId>lp-multisorter</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
+	<version>1.2.0</version>
 	<name>Lt. Peacock's Multisorter</name>
 	<description>Sorter for various file types.</description>
 	<url>http://multisorter.lt-peacock.com</url>
@@ -24,7 +24,7 @@
 		<connection>scm:git:git://github.com/LieutenantPeacock/multisorter.git</connection>
 		<developerConnection>scm:git:file://d:/LocRepo/lp-multisorter.git</developerConnection>
 		<url>https://github.com/LieutenantPeacock/multisorter</url>
-		<tag>HEAD</tag>
+		<tag>lp-multisorter-1.2.0</tag>
 	</scm>
 	<distributionManagement>
 		<snapshotRepository>
