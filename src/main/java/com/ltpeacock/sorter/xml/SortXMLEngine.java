@@ -1,20 +1,22 @@
 package com.ltpeacock.sorter.xml;
 
 import static com.ltpeacock.sorter.xml.Util.logAndThrow;
-import static com.ltpeacock.sorter.xml.Util.removeEmptyLines;
+import static com.ltpeacock.sorter.xml.Util.repeat;
 import static java.lang.String.format;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Queue;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,6 +24,11 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -29,9 +36,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -43,8 +51,9 @@ import org.xml.sax.SAXException;
  */
 public class SortXMLEngine {
     private static final Logger LOG = Logger.getLogger(SortXMLEngine.class.getName());
-    private final Comparator<Element> elementComparator;
-    private final Comparator<Node> attributeComparator;
+    private final Comparator<ElementVO> elementComparator;
+    private final Comparator<ElementAttribute> attributeComparator;
+    private int indent = 2;
     
     /**
      * Constructs a {@code SortXMLEngine} using {@link ElementComparator} for ordering elements
@@ -63,7 +72,7 @@ public class SortXMLEngine {
      * @param elementComparator The comparator for ordering elements in the XML file
      * @param attributeComparator The comparator for ordering the attributes for each element
      */
-    public SortXMLEngine(final Comparator<Element> elementComparator, final Comparator<Node> attributeComparator) {
+    public SortXMLEngine(final Comparator<ElementVO> elementComparator, final Comparator<ElementAttribute> attributeComparator) {
     	this.elementComparator = elementComparator;
     	this.attributeComparator = attributeComparator;
     }
@@ -77,18 +86,24 @@ public class SortXMLEngine {
      */
     public void sort(final InputStream in, final OutputStream os) {
         try (BufferedInputStream bis = new BufferedInputStream(in);
-                BufferedOutputStream bos = new BufferedOutputStream(os);
-                PrintWriter pw = new PrintWriter(bos)) {
-            final Document doc = readXml(in);
-            final Element rootDocElement = doc.getDocumentElement();
-            sortElement(rootDocElement);
-            final String prettyXml = XmlPrettyPrint.prettyXml(doc);
-            final String prettyXml2 = XmlPrettyPrint.prettyFormat(prettyXml);
-            final String prettyXml3 = removeEmptyLines(prettyXml2);
-            final String prettyXml4 = prettyXml3.replaceAll("\">", "\" >").replaceAll("\"/>", "\" />");
-            final String prettyXml5 = removeExtraWsdlpartClose(prettyXml4);
-            pw.print(prettyXml5);
-        } catch (IOException e) {
+                BufferedOutputStream bos = new BufferedOutputStream(os);) {
+        	final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newFactory();
+        	final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        	int b;
+        	while((b = bis.read())!= -1) baos.write(b);
+        	final byte[] bytes = baos.toByteArray();
+        	final SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+        	final SAXParser saxParser = saxParserFactory.newSAXParser();
+			final AttributesSAXHandler handler = new AttributesSAXHandler();
+			saxParser.parse(new ByteArrayInputStream(bytes), handler);
+        	final XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(bos, StandardCharsets.UTF_8.name());
+        	final Document doc = readXml(new ByteArrayInputStream(bytes));
+            final ElementVO root = collectElements(doc.getDocumentElement(), handler.getQueue());
+            writer.writeStartDocument();
+            sortElement(root, writer, 0);
+            writer.writeEndDocument();
+            writer.flush();
+        } catch (IOException | XMLStreamException | ParserConfigurationException | SAXException e) {
             logAndThrow(e);
         }
     }
@@ -110,47 +125,60 @@ public class SortXMLEngine {
         return prettyXml;
     }
     
-    private void sortElement(final Element element) {
-        final NodeList nodeList = element.getChildNodes();
+    private ElementVO collectElements(final Element element, final Queue<List<ElementAttribute>> queue) {
+    	final ElementVO newElem = new ElementVO(element, queue.poll());
+    	final NodeList nodeList = element.getChildNodes();
         final int length = nodeList.getLength();
-        final List<Element> elemList0 = new ArrayList<>(length);
-        final NamedNodeMap attributesMap = element.getAttributes();
-        final int attributesLen = attributesMap.getLength();
-        final List<Node> attributes = new ArrayList<>(attributesLen);
-        for(int i = attributesLen - 1; i >= 0; i--) {
-        	final Node attribute = attributesMap.item(i);
-        	attributes.add(attribute);
-        	element.removeAttribute(attribute.getNodeName());
+        final List<ElementVO> children = new ArrayList<>(length);
+        for(int i = 0; i < length; i++) {
+        	final Node node = nodeList.item(i);
+        	if(node.getNodeType() == Node.ELEMENT_NODE) {
+        		children.add(collectElements((Element) node, queue));
+        	}
         }
-        attributes.sort(attributeComparator);
-        for(final Node attribute: attributes) {
-        	element.setAttribute(attribute.getNodeName(), attribute.getNodeValue());
+        children.sort(elementComparator);
+        newElem.childElements = children;
+        return newElem;
+    }
+    
+    private void sortElement(final ElementVO element, final XMLStreamWriter writer, final int depth) throws XMLStreamException {
+    	writer.writeCharacters(System.lineSeparator());
+    	writer.writeCharacters(repeat(" ", indent * depth));
+    	writer.writeStartElement(element.getElement().getNodeName());
+        final NodeList nodeList = element.getElement().getChildNodes();
+        final int length = nodeList.getLength();
+        element.attributes.sort(attributeComparator);
+        for(final ElementAttribute attribute: element.getAttributes()) {
+        	writer.writeAttribute(attribute.getQualifiedName(), attribute.getValue());
         }
         for (int i = 0; i < length; i++) {
             Node currentNode = nodeList.item(i);
-            if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
-                final String nodeName = currentNode.getNodeName();
-                LOG.fine(format("localName [%s]", nodeName));
-                Element currentEl = (Element) currentNode;
-                elemList0.add(currentEl);
-                sortElement(currentEl);
-            } else {
+            if (currentNode.getNodeType() != Node.ELEMENT_NODE) {
                 LOG.fine(format("Node type [%s]", currentNode.getNodeType()));
+                if(currentNode.getNodeType() == Node.TEXT_NODE) {
+                	if(!currentNode.getTextContent().trim().isEmpty()) {
+                		final String[] lines = currentNode.getTextContent().split("\\R");
+                		for(final String line: lines) {
+                			if(!line.trim().isEmpty()) {
+	                			writer.writeCharacters(System.lineSeparator());
+	                			writer.writeCharacters(repeat(" ", (depth + 1) * indent));
+	                			writer.writeCharacters(line.trim());
+                			}
+                		}
+                	}
+                } else if(currentNode.getNodeType() == Node.COMMENT_NODE) {
+                	writer.writeComment(((Comment) currentNode).getData());
+                } else if(currentNode.getNodeType() == Node.CDATA_SECTION_NODE) {
+                	writer.writeCData(((CDATASection)currentNode).getData());
+                }
             }
         }
-        Collections.sort(elemList0, elementComparator);
-        int count = 0;
-        for (Node elem : elemList0) {
-            count++;
-            LOG.fine(format("removing Count [%s], name[%s]", count, elem.getNodeName()));
-            element.removeChild(elem);
+        for(final ElementVO child: element.getChildElements()) {
+        	sortElement(child, writer, depth + 1);
         }
-        count = 0;
-        for (Node elem : elemList0) {
-            count++;
-            LOG.fine(format("Count [%s], name[%s]", count, elem.getNodeName()));
-            element.appendChild(elem);
-        }
+        writer.writeCharacters(System.lineSeparator());
+        writer.writeCharacters(repeat(" ", indent * depth));
+        writer.writeEndElement();
     }
 
     public static void printDocument(final Document doc, final OutputStream out)
@@ -169,6 +197,7 @@ public class SortXMLEngine {
 
     private Document readXml(final InputStream is) {
         DocumentBuilderFactory docBuilderFac = DocumentBuilderFactory.newInstance();
+        docBuilderFac.setIgnoringElementContentWhitespace(true);
         DocumentBuilder docBuilder = null;
         Document doc = null;
         try {
@@ -178,5 +207,13 @@ public class SortXMLEngine {
             logAndThrow(e);
         }
         return doc;
+    }
+    
+    /**
+     * Set the number of spaces used in indenting the output.
+     * @param spaces The number of spaces used for one indent level.
+     */
+    public void setIndent(final int spaces) {
+    	this.indent = spaces;
     }
 }

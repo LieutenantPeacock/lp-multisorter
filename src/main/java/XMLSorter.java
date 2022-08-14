@@ -50,15 +50,17 @@ public class XMLSorter {
     
     private static void run(final InputStream is, final OutputStream os, final String inputName, final String outputName) {
         final long startMs = System.currentTimeMillis();
-        System.out.format("Reading from '%s' ...%n", inputName);
+        if(os != System.out) 
+        	System.out.format("Reading from '%s' ...%n", inputName);
         SortXMLEngine engine = new SortXMLEngine();
         engine.sort(is, os);
         final long endMs = System.currentTimeMillis();
         final long tookMs = endMs - startMs;
-        System.out.format("Wrote to '%s' ..., took %s ms.%n", outputName, tookMs);
+        if(os != System.out)
+            System.out.format("Wrote to '%s' ..., took %s ms.%n", outputName, tookMs);
     }
 
-    protected static void help() {
+    private static void help() {
         System.out.println("Usage: [inputFile] [outputFile]");
     }
 }

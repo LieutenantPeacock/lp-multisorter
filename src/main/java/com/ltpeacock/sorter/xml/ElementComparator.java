@@ -3,28 +3,26 @@ package com.ltpeacock.sorter.xml;
 import java.util.Comparator;
 import java.util.Optional;
 
-import org.w3c.dom.Element;
-
 /**
- * Comparator for sorting {@link Element}s by node name and then by the {@code "name"} attribute.
+ * Comparator for sorting elements by node name and then by the {@code "name"} attribute.
  * @author LieutenantPeacock
  *
  */
-public class ElementComparator implements Comparator<Element> {
+public class ElementComparator implements Comparator<ElementVO> {
     private static final String NAME = "name";
     /**
      * Comparator for maintaining original order of XML elements.
      */
-    public static final Comparator<Element> MAINTAIN_ORDER = (a,b) -> 0;
+    public static final Comparator<ElementVO> MAINTAIN_ORDER = (a,b) -> 0;
 
     @Override
-    public int compare(final Element arg0, final Element arg1) {
+    public int compare(final ElementVO arg0, final ElementVO arg1) {
         int c = Util.compare(safeToUpper(
-                reverseColumns(arg0.getNodeName())),
-                safeToUpper(reverseColumns(arg1.getNodeName())));
+                reverseColumns(arg0.getElement().getNodeName())),
+                safeToUpper(reverseColumns(arg1.getElement().getNodeName())));
         if (c == 0) {
-            final String nameAttr0 = arg0.getAttribute(NAME);
-            final String nameAttr1 = arg1.getAttribute(NAME);
+            final String nameAttr0 = arg0.getElement().getAttribute(NAME);
+            final String nameAttr1 = arg1.getElement().getAttribute(NAME);
             c = Util.compare(safeToUpper(nameAttr0), safeToUpper(nameAttr1));
         }
         return c;

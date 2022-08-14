@@ -49,4 +49,10 @@ public class Util {
         LOG.log(Level.SEVERE, "Exception", e);
         throw new RuntimeException(e);
     }
+    
+    public static String repeat(final String str, final int times) {
+    	final StringBuilder sb = new StringBuilder(str.length() * times);
+    	for(int i = 0; i < times; i++) sb.append(str);
+    	return sb.toString();
+    }
 }
