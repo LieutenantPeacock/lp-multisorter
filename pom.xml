@@ -24,8 +24,8 @@
 		<connection>scm:git:git://github.com/LieutenantPeacock/multisorter.git</connection>
 		<developerConnection>scm:git:file://d:/LocRepo/lp-multisorter.git</developerConnection>
 		<url>https://github.com/LieutenantPeacock/multisorter</url>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
