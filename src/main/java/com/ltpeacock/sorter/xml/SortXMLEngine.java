@@ -54,6 +54,8 @@ public class SortXMLEngine {
     private final Comparator<ElementVO> elementComparator;
     private final Comparator<ElementAttribute> attributeComparator;
     private int indent = 2;
+    private boolean selfClosing = true;
+    private boolean preserveWhitespace = false;
     
     /**
      * Constructs a {@code SortXMLEngine} using {@link ElementComparator} for ordering elements
@@ -103,6 +105,7 @@ public class SortXMLEngine {
             sortElement(root, writer, 0);
             writer.writeEndDocument();
             writer.flush();
+            writer.close();
         } catch (IOException | XMLStreamException | ParserConfigurationException | SAXException e) {
             logAndThrow(e);
         }
@@ -142,11 +145,27 @@ public class SortXMLEngine {
     }
     
     private void sortElement(final ElementVO element, final XMLStreamWriter writer, final int depth) throws XMLStreamException {
-    	writer.writeCharacters(System.lineSeparator());
-    	writer.writeCharacters(repeat(" ", indent * depth));
-    	writer.writeStartElement(element.getElement().getNodeName());
-        final NodeList nodeList = element.getElement().getChildNodes();
+    	final NodeList nodeList = element.getElement().getChildNodes();
         final int length = nodeList.getLength();
+        if(!preserveWhitespace) {
+    	    writer.writeCharacters(System.lineSeparator());
+    	    writer.writeCharacters(repeat(" ", indent * depth));
+        }
+        boolean selfClose = selfClosing && element.getChildElements().isEmpty();
+        for(int i = 0; i < length; i++) {
+        	final Node node = nodeList.item(i);
+        	if(node.getNodeType() == Node.TEXT_NODE && 
+        			!node.getTextContent().trim().isEmpty()
+        			|| node.getNodeType() == Node.COMMENT_NODE
+        			|| node.getNodeType() == Node.CDATA_SECTION_NODE) {
+        		selfClose = false;
+        		break;
+        	}
+        }
+    	if(!selfClose)
+    	    writer.writeStartElement(element.getElement().getNodeName());
+    	else
+    		writer.writeEmptyElement(element.getElement().getNodeName());
         element.attributes.sort(attributeComparator);
         for(final ElementAttribute attribute: element.getAttributes()) {
         	writer.writeAttribute(attribute.getQualifiedName(), attribute.getValue());
@@ -156,7 +175,9 @@ public class SortXMLEngine {
             if (currentNode.getNodeType() != Node.ELEMENT_NODE) {
                 LOG.fine(format("Node type [%s]", currentNode.getNodeType()));
                 if(currentNode.getNodeType() == Node.TEXT_NODE) {
-                	if(!currentNode.getTextContent().trim().isEmpty()) {
+                	if(preserveWhitespace) {
+                		writer.writeCharacters(currentNode.getTextContent());
+                	} else if(!currentNode.getTextContent().trim().isEmpty()) {
                 		final String[] lines = currentNode.getTextContent().split("\\R");
                 		for(final String line: lines) {
                 			if(!line.trim().isEmpty()) {
@@ -176,9 +197,13 @@ public class SortXMLEngine {
         for(final ElementVO child: element.getChildElements()) {
         	sortElement(child, writer, depth + 1);
         }
-        writer.writeCharacters(System.lineSeparator());
-        writer.writeCharacters(repeat(" ", indent * depth));
-        writer.writeEndElement();
+        if(!selfClose) {
+        	if(!preserveWhitespace) {
+                writer.writeCharacters(System.lineSeparator());
+                writer.writeCharacters(repeat(" ", indent * depth));
+        	}
+            writer.writeEndElement();
+        }
     }
 
     public static void printDocument(final Document doc, final OutputStream out)
@@ -210,10 +235,29 @@ public class SortXMLEngine {
     }
     
     /**
-     * Set the number of spaces used in indenting the output.
+     * Set the number of spaces used in indenting the output. The default is {@code 2}.
      * @param spaces The number of spaces used for one indent level.
      */
     public void setIndent(final int spaces) {
     	this.indent = spaces;
+    }
+    
+    /**
+     * Set whether the output should use self-closing elements where possible.
+     * The default is {@code true}.
+     * @param selfClosing Whether self-closing elements should be used.
+     */
+    public void setSelfClosing(final boolean selfClosing) {
+    	this.selfClosing = selfClosing;
+    }
+    
+    /**
+     * Set whether whitespace in the document should be preserved (i.e., considered significant).
+     * The default is {@code false}. 
+     * If this is set to {@code true}, indenting will be turned off.
+     * @param preserveWhitespace Whether whitespace should be preserved.
+     */
+    public void setPreserveWhitespace(final boolean preserveWhitespace) {
+    	this.preserveWhitespace = preserveWhitespace;
     }
 }
