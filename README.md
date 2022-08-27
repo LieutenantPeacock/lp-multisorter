@@ -39,7 +39,7 @@ java -cp lp-multisorter.jar XMLSorter [inputFile] [outputFile]
 ```
 The command above reads an XML file at the location specified by `inputFile` and outputs the sorted result to the location specified by `outputFile`. Elements are sorted lexicographically by node name and then by the `"name"` attribute, and their attributes are sorted lexicographically by name.
 
-If `outputFile` is not specified, output goes to stdout; if `inputFile` is not specified, input is taken from stdin.
+If `outputFile` is not specified, output goes to stdout; if `inputFile` is also not specified, input is taken from stdin.
 
 Example:
 
@@ -74,6 +74,35 @@ Then, call `sort` with an `InputStream` to read the file from and an `OutputStre
 engine.sort(new FileInputStream("file.xml"), new FileOutputStream("file_sorted.xml"));
 ```
 
+## JSON
+### Command Line Usage
+```
+java -cp lp-multisorter.jar JSONSorter [inputFile] [outputFile]
+```
+This reads a JSON file at the location specified by inputFile and writes the sorted result to the location specified by outputFile. The sorting is done by rearranging all the keys in each object in lexicographic order. Elements of arrays are not moved around.
+
+If `outputFile` is not specified, output goes to stdout; if `inputFile` is also not specified, input is taken from stdin.
+
+### Programmatic Usage
+Construct a `SortJSONEngine`. An optional `Comparator<String>` can be specified as the first argument to order the keys in each object. By default, the engine sorts keys in lexicographic order.
+
+```java
+SortJSONEngine engine = new SortJSONEngine();
+```
+
+Then, call `sort` with an `InputStream` and an `OutputStream`.
+
+```java
+engine.sort(new FileInputStream("file.json"), new FileOutputStream("file_sorted.json"));
+```
+
+`sort` may also be called with a `com.github.openjson.JSONObject` or `com.github.openjson.JSONArray` as the only argument, which will sort the keys of all objects in the structure in place.
+
+```java
+JSONObject obj = new JSONObject("{\"b\":1,\"a\":2}");
+engine.sort(obj);
+```
+
 ## OpenAPI JSON
 Like with XML, Lt. Peacock's Multisorter can be used to sort OpenAPI JSON for easy comparison, especially for large files.
 
@@ -82,6 +111,8 @@ Like with XML, Lt. Peacock's Multisorter can be used to sort OpenAPI JSON for ea
 java -cp lp-multisorter.jar OpenApiJSONSorter [inputFile] [outputFile]
 ```
 The command above reads an OpenAPI JSON file at the location specified by `inputFile` and outputs the sorted result to the location specified by `outputFile`.
+
+If `outputFile` is not specified, output goes to stdout; if `inputFile` is also not specified, input is taken from stdin.
 
 ### Programmatic Usage
 Construct a `SortOpenApiJSONEngine`:
