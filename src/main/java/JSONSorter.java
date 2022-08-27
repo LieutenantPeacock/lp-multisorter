@@ -4,10 +4,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Comparator;
 
 import com.ltpeacock.sorter.json.SortJSONEngine;
 
+/**
+ * Main class for sorting JSON using {@link SortJSONEngine}.
+ * @author LieutenantPeacock
+ *
+ */
 public class JSONSorter {
 	public static void main(final String[] args) throws IOException {
 		switch (args.length) {
