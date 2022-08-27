@@ -17,6 +17,10 @@ public class SortJSONEngine {
 	private final Comparator<String> keyComparator;
 	private boolean recursive = true;
 	private int indent = 4;
+	
+	public SortJSONEngine() {
+		this(Comparator.naturalOrder());
+	}
 
 	public SortJSONEngine(final Comparator<String> keyComparator) {
 		this.keyComparator = keyComparator;

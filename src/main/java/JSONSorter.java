@@ -43,7 +43,7 @@ public class JSONSorter {
 		final long startMs = System.currentTimeMillis();
 		if (os != System.out)
 			System.out.format("Reading from '%s' ...%n", inputName);
-		final SortJSONEngine engine = new SortJSONEngine(Comparator.naturalOrder());
+		final SortJSONEngine engine = new SortJSONEngine();
 		engine.sort(is, os);
 		final long endMs = System.currentTimeMillis();
 		final long tookMs = endMs - startMs;
