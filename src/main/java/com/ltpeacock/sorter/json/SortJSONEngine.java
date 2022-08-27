@@ -13,19 +13,37 @@ import java.util.Comparator;
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 
+/**
+ * Engine for sorting JSON by key name.
+ * @author LieutenantPeacock
+ *
+ */
 public class SortJSONEngine {
 	private final Comparator<String> keyComparator;
 	private boolean recursive = true;
 	private int indent = 4;
 	
+	/**
+	 * Constructs a {@code SortJSONEngine} that sorts the keys in lexicographical order.
+	 */
 	public SortJSONEngine() {
 		this(Comparator.naturalOrder());
 	}
 
+	/**
+	 * Constructs a {@code SortJSONEngine} that sorts the keys using the {@code keyComparator}.
+	 * @param keyComparator The {@link Comparator} for sorting object keys.
+	 */
 	public SortJSONEngine(final Comparator<String> keyComparator) {
 		this.keyComparator = keyComparator;
 	}
 	
+	/**
+	 * Sorts the JSON from an {@link InputStream} and prints the result to the given {@link OutputStream}.
+	 * @param is The InputStream to read the JSON file from.
+	 * @param os The OutputStream to write the sorted JSON to.
+	 * @throws IOException If there is an error in reading/writing data.
+	 */
 	public void sort(InputStream is, OutputStream os) throws IOException {
 		if(!(is instanceof BufferedInputStream)) is = new BufferedInputStream(is);
 		if(!(os instanceof BufferedOutputStream)) os = new BufferedOutputStream(os);
@@ -44,6 +62,10 @@ public class SortJSONEngine {
 		os.flush();
 	}
 
+	/**
+	 * Sorts the keys of a {@link JSONObject}.
+	 * @param obj The object to sort.
+	 */
 	public void sort(final JSONObject obj) {
 		final String[] keys = JSONObject.getNames(obj);
 		Arrays.sort(keys, keyComparator);
@@ -61,6 +83,10 @@ public class SortJSONEngine {
 		}
 	}
 
+	/**
+	 * Sorts the keys of all objects in the given {@link JSONArray}.
+	 * @param arr The JSONArray.
+	 */
 	public void sort(final JSONArray arr) {
 		for (final Object obj : arr) {
 			if (obj instanceof JSONObject) {
@@ -71,10 +97,22 @@ public class SortJSONEngine {
 		}
 	}
 
+	/**
+	 * Set whether the sorting should be recursive. 
+	 * If set to {@code true}, the keys of all objects contained within the root object
+	 * will also be sorted, and arrays within arrays will also have the keys of 
+	 * all objects within them sorted.
+	 * The default is {@code true}.
+	 * @param recursive Whether or not the sorting should be recursive.
+	 */
 	public void setRecursive(boolean recursive) {
 		this.recursive = recursive;
 	}
 
+	/**
+	 * Set the amount of indent used when outputting the JSON. The default is {@code 4}.
+	 * @param indent The number of spaces used for one indent level.
+	 */
 	public void setIndent(int indent) {
 		this.indent = indent;
 	}
