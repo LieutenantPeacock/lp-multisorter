@@ -12,13 +12,14 @@ import java.util.Comparator;
 
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
+import com.ltpeacock.sorter.ContentSorter;
 
 /**
  * Engine for sorting JSON by key name.
  * @author LieutenantPeacock
  *
  */
-public class SortJSONEngine {
+public class SortJSONEngine implements ContentSorter {
 	private final Comparator<String> keyComparator;
 	private boolean recursive = true;
 	private int indent = 4;
@@ -44,6 +45,7 @@ public class SortJSONEngine {
 	 * @param os The OutputStream to write the sorted JSON to.
 	 * @throws IOException If there is an error in reading/writing data.
 	 */
+	@Override
 	public void sort(InputStream is, OutputStream os) throws IOException {
 		if(!(is instanceof BufferedInputStream)) is = new BufferedInputStream(is);
 		if(!(os instanceof BufferedOutputStream)) os = new BufferedOutputStream(os);

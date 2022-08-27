@@ -35,12 +35,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.ltpeacock.sorter.ContentSorter;
+
 /**
  * Engine for sorting XML.
  * @author LieutenantPeacock
  *
  */
-public class SortXMLEngine {
+public class SortXMLEngine implements ContentSorter {
     private static final Logger LOG = Logger.getLogger(SortXMLEngine.class.getName());
     private final Comparator<ElementVO> elementComparator;
     private final Comparator<ElementAttribute> attributeComparator;
@@ -77,6 +79,7 @@ public class SortXMLEngine {
      * @param in The InputStream to read the XML document from
      * @param os The OutputStream to write the sorted XML document to
      */
+    @Override
     public void sort(final InputStream in, final OutputStream os) {
         try (BufferedInputStream bis = new BufferedInputStream(in);
                 BufferedOutputStream bos = new BufferedOutputStream(os);) {
