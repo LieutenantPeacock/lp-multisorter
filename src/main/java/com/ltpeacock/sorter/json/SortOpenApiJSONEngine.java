@@ -1,11 +1,11 @@
 package com.ltpeacock.sorter.json;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +14,7 @@ import java.util.List;
 
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
+import com.github.openjson.JSONTokener;
 import com.ltpeacock.sorter.ContentSorter;
 
 /**
@@ -32,14 +33,10 @@ public class SortOpenApiJSONEngine implements ContentSorter {
 	 */
 	@Override
 	public void sort(InputStream is, OutputStream os) throws IOException {
-		if (!(is instanceof BufferedInputStream))
-			is = new BufferedInputStream(is);
 		if (!(os instanceof BufferedOutputStream))
 			os = new BufferedOutputStream(os);
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		for (int b; (b = is.read()) != -1;)
-			baos.write(b);
-		final JSONObject sorted = sort(new JSONObject(baos.toString(StandardCharsets.UTF_8.name())));
+		final Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+		final JSONObject sorted = sort((JSONObject) new JSONTokener(reader).nextValue());
 		os.write(sorted.toString(indent).getBytes(StandardCharsets.UTF_8));
 		os.flush();
 	}

@@ -1,17 +1,18 @@
 package com.ltpeacock.sorter.json;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
+import com.github.openjson.JSONTokener;
 import com.ltpeacock.sorter.ContentSorter;
 
 /**
@@ -47,20 +48,24 @@ public class SortJSONEngine implements ContentSorter {
 	 */
 	@Override
 	public void sort(InputStream is, OutputStream os) throws IOException {
-		if(!(is instanceof BufferedInputStream)) is = new BufferedInputStream(is);
-		if(!(os instanceof BufferedOutputStream)) os = new BufferedOutputStream(os);
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		for(int b; (b = is.read()) != -1;) baos.write(b);
-		final String str = baos.toString(StandardCharsets.UTF_8.name());
-		if(str.trim().startsWith("{")) {
-			final JSONObject obj = new JSONObject(str);
-			sort(obj);
-			os.write(obj.toString(indent).getBytes(StandardCharsets.UTF_8.name()));
+		if (!(os instanceof BufferedOutputStream)) os = new BufferedOutputStream(os);
+		final Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+		final Object value = new JSONTokener(reader).nextValue();
+		final String output;
+		if (value instanceof JSONObject) {
+			sort((JSONObject) value);
+			output = ((JSONObject) value).toString(indent);
+		} else if (value instanceof JSONArray) {
+			sort((JSONArray) value);
+			output = ((JSONArray) value).toString(indent);
+		} else if (value instanceof String) {
+			output = JSONObject.quote((String) value);
+		} else if (value instanceof Number) {
+			output = JSONObject.numberToString((Number) value);
 		} else {
-			final JSONArray arr = new JSONArray(str);
-			sort(arr);
-			os.write(arr.toString(indent).getBytes(StandardCharsets.UTF_8.name()));
+			output = String.valueOf(value);
 		}
+		os.write(output.getBytes(StandardCharsets.UTF_8));
 		os.flush();
 	}
 
