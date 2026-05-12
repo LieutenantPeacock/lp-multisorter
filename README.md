@@ -20,13 +20,13 @@ To see instructions on usage:
 java -jar lp-multisorter.jar
 ```
 
-This project is also available as a [Maven artifact](https://search.maven.org/artifact/com.lt-peacock/lp-multisorter/1.3.0/jar). Maven users can include the library with the following dependency in pom.xml:
+This project is also available as a [Maven artifact](https://central.sonatype.com/artifact/com.lt-peacock/lp-multisorter). Maven users can include the library with the following dependency in pom.xml:
 
 ```xml
 <dependency>
   <groupId>com.lt-peacock</groupId>
   <artifactId>lp-multisorter</artifactId>
-  <version>1.3.0</version>
+  <version>1.4.0</version>
 </dependency>
 ```
 
